@@ -100,8 +100,9 @@ We are actively working to implement the following features to make the system f
 * **Edge Computing:** Deploying lightweight inference models directly to traffic cameras for localized, low-latency decision making.
 
 ## ScreenShot of Project
-<img width="2556" height="1597" alt="image" src="https://github.com/user-attachments/assets/b370088d-7ddf-4de6-8e60-1c7ba48b05fc" />
-<img width="2556" height="1597" alt="image" src="https://github.com/user-attachments/assets/35c35ef1-4bf2-4f51-891c-577d3f4f535c" />
+<img width="2556" height="1597" alt="image" src="https://github.com/user-attachments/assets/ebc32af7-aa62-42e1-9200-8e78521e916e" />
+<img width="2556" height="1597" alt="image" src="https://github.com/user-attachments/assets/10f648ce-9ff0-4a71-944c-21e69a9d69fc" />
+
 
 
 

@@ -99,6 +99,12 @@ We are actively working to implement the following features to make the system f
 * **Real-time IoT Integration:** Connecting the model to smart city infrastructure (smart traffic lights, dynamic speed limit signs).
 * **Edge Computing:** Deploying lightweight inference models directly to traffic cameras for localized, low-latency decision making.
 
+## ScreenShot of Project
+<img width="2556" height="1597" alt="image" src="https://github.com/user-attachments/assets/b370088d-7ddf-4de6-8e60-1c7ba48b05fc" />
+<img width="2556" height="1597" alt="image" src="https://github.com/user-attachments/assets/35c35ef1-4bf2-4f51-891c-577d3f4f535c" />
+
+
+
 ## 👥 The Team
 * **[Your Name]** - [Your Role/Focus]
 * **[Team Member 2]** - [Role/Focus]

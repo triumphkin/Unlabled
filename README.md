@@ -106,5 +106,5 @@ We are actively working to implement the following features to make the system f
 
 
 ## 👥 The Team
-* **[Your Name]** - [Your Role/Focus]
-* **[Team Member 2]** - [Role/Focus]
+* **Arjun Singh**
+* **Mahi Agrawal**

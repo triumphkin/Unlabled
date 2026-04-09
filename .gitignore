@@ -1,0 +1,5 @@
+__pycache__/
+.venv/ 
+condavenv/
+.data_gen.py
+.data_gen

@@ -1,24 +1,23 @@
-
 import numpy as np
 import pandas as pd
 import random
 from datetime import datetime, timedelta
 import behavior
 from ml_regression import predict_jam
-random.seed(45)
-np.random.seed(45)
+random.seed(50)
+np.random.seed(50)
 class Car:
     def __init__(self, car_id, spawn_lane):
         self.id = car_id
         self.lane = spawn_lane # 0=Footpath, 1=Left, 2=Center(Merge), 3=Right
-        self.position = 0.0 # Starts at 0 meters
-        self.speed = random.uniform(15.0, 25.0) # Meters per second (~50-90 km/h)
+        self.position = 0.0 
+        self.speed = random.uniform(15.0, 25.0) 
         self.target_speed = 25.0
         self.ambulance=0
         self.color=0
 
         
-        # --- HUMAN BEHAVIOR PROFILES ---
+       
         self.aggression = random.uniform(0.0, 1.0)
         self.compliance = random.uniform(0.0, 1.0)
         self.impatience = random.uniform(0.0, 1.0)
@@ -46,7 +45,7 @@ class TrafficSimulation:
         self.cars_merged_in_batch = 0  # Counter
         self.batch_size = 5            # How many cars per batch
         
-        # --- TIMELINE SETUP ---
+      
         # Start at midnight on the first day
         self.start_time = datetime(2026, 4, 1, 0, 0) 
 
@@ -78,7 +77,7 @@ class TrafficSimulation:
     def step(self):
         self.time_step += 1
         
-        # Determine dynamic weather per step (more realistic variation over 6 months)
+        # Determine dynamic weather per step
         self.weather = random.choices(['Clear', 'Rain', 'Fog'], weights=[0.80, 0.15, 0.05])[0]
         
         self.cars.sort(key=lambda c: c.position, reverse=True)
@@ -92,7 +91,7 @@ class TrafficSimulation:
                 live_densities[c.lane] += 1
                 
         # --- THE AI BRAIN: VARIABLE SPEED LIMITS (VSL) ---
-        # If the AI detects gridlock approaching (via your predictor), activate VSL
+        
         if self.ai_zipper_active:
             vsl_targets = behavior.calculate_variable_speed_limits(live_densities, base_speed=25.0)
         else:
@@ -105,8 +104,8 @@ class TrafficSimulation:
             if car.has_finished:
                 continue
                 
-            # --- APPLY OVERHEAD SPEED LIMIT TO CAR ---
-            # The car's personal target speed is now dictated by the AI overhead signs
+            # APPLY OVERHEAD SPEED LIMIT TO CAR ---
+          
             if car.lane in [1, 2, 3]:
                 car.target_speed = vsl_targets[car.lane]
                 # car.speed = vsl_targets[car.lane]
@@ -139,54 +138,59 @@ class TrafficSimulation:
             # The "Virtual Stop Line" is 100 meters before the merge point
             # --- 2. LANE MERGING LOGIC (Adaptive Batch Zipper) ---
             stop_line = self.merge_point - 100 
+            # --- LANE MERGING LOGIC (Realistic Fluid Zipper) ---
+            merge_zone_start = self.merge_point - 100 
+            late_merge_point = self.merge_point - 15
             
-            # Only affect cars in the outer lanes
+            # We must look at the car currently leading in Lane 2 to ensure we don't merge on top of them!
+            leader_l2 = lane_leaders[2] 
+            
             if car.lane in [1, 3]:
-                
                 if self.ai_zipper_active:
                     # ==========================================
-                    # AI MANAGED BATCH MERGING
+                    # AI MANAGED FLUID ZIPPER (1-to-1 True Zipper)
                     # ==========================================
                     
-                    # If the car reaches the virtual stop line...
-                    if car.position >= stop_line:
-                        if car.lane == self.active_merge_lane:
-                            # 🟢 GREEN LIGHT: It is this lane's turn to merge
+                    # 1. Harmonization & Yielding Zone (100m to 15m)
+                    if car.position >= merge_zone_start and car.position < late_merge_point:
+                        car.speed = min(car.speed, 18.0) # Harmonize speed to prevent shockwaves
+                        
+                        # Check if there are actually cars in the other lane to yield to
+                        other_lane = 3 if car.lane == 1 else 1
+                        other_lane_populated = any(c.lane == other_lane and c.position >= merge_zone_start for c in active_cars)
+                        
+                        # THE ZIPPER YIELD: If it's NOT this car's turn, it MUST tap the brakes.
+                        # This creates the physical "gap" so they don't arrive at the same time.
+                        if other_lane_populated and car.lane != self.expected_zipper_lane:
+                            car.speed = max(8.0, car.speed - 2.0)
+                            
+                    # 2. The Execution Zone (Late Merge)
+                    elif car.position >= late_merge_point:
+                        # SPACE CHECK: Is there a physical gap in Lane 2? (8 meters safe distance)
+                        if leader_l2 is None or (leader_l2.position - car.position) > 8.0:
                             car.lane = 2
-                            car.speed *= 0.9 # Smooth merge
+                            car.speed = max(12.0, car.speed * 0.95) # Maintain momentum
                             
-                            self.cars_merged_in_batch += 1
-                            
-                            # If 5 cars have merged, flip the traffic light!
-                            if self.cars_merged_in_batch >= self.batch_size:
-                                self.active_merge_lane = 3 if self.active_merge_lane == 1 else 1
-                                self.cars_merged_in_batch = 0
+                            # Instantly flip the right-of-way to the other lane (1-to-1 Zip)
+                            self.expected_zipper_lane = 3 if car.lane == 1 else 1
                         else:
-                            # 🔴 RED LIGHT: HARD WALL. 
-                            # Force the car to stay at the stop line. No tunneling allowed!
-                            car.position = stop_line 
-                            car.speed = 0.0
-                            car.hard_brakes += 1
-                            
-                    # If they are approaching a red light, make them slow down early
-                    elif car.lane != self.active_merge_lane and (stop_line - car.position) < 50:
-                        car.speed = max(0.0, car.speed - 4.0)
+                            # Not enough space! A car merged just before this one. 
+                            # Tap brakes and wait for the next time step.
+                            car.speed = max(0.0, car.speed - 3.0)
 
                 else:
                     # ==========================================
                     # UNMANAGED CHAOS (Baseline)
                     # ==========================================
-                    # Without AI, everyone just drives until the road runs out, 
-                    # then forces their way into Lane 2 at the exact same spot.
                     if car.position >= self.merge_point - 10:
-                        car.lane = 2
-                        car.speed *= 0.5 # Massive slow down causing shockwaves backwards
-                
-            else:
-
-                if car.position > (self.merge_point - 100) and car.lane in [1, 3]:
-                    car.lane = 2
-                    car.speed *= 0.8 
+                        # Aggressive forcing into the lane
+                        if leader_l2 is None or (leader_l2.position - car.position) > 5.0:
+                            car.lane = 2
+                            car.speed *= 0.5 # Massive shockwave slow down
+                        else:
+                            # Slamming on brakes because they got cut off
+                            car.speed = max(0.0, car.speed - 6.0)
+                            car.hard_brakes += 1
 
             # --- BEHAVIOR ---
             df=pd.read_csv('ARMA-Flow-main/Challan_list.csv')
@@ -361,7 +365,7 @@ if __name__ == "__main__":
     sim = TrafficSimulation()
     
     # 180 days * (24 hours / 2 hour jumps) = 2160 steps
-    total_steps = 300 
+    total_steps = 300
     
     print(f"Starting 6-Month Simulation Generator (Total intervals: {total_steps})...")
     

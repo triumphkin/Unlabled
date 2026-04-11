@@ -4,19 +4,17 @@ import random
 from datetime import datetime, timedelta
 import behavior
 
-random.seed(45)
-np.random.seed(45)
+random.seed(50)
+np.random.seed(50)
 class Car:
     def __init__(self, car_id, spawn_lane):
         self.id = car_id
         self.lane = spawn_lane # 0=Footpath, 1=Left, 2=Center(Merge), 3=Right
-        self.position = 0.0 # Starts at 0 meters
-        self.speed = random.uniform(15.0, 25.0) # Meters per second (~50-90 km/h)
+        self.position = 0.0
+        self.speed = random.uniform(15.0, 25.0) 
         self.target_speed = 25.0
         self.ambulance=0
         self.color=0
-        
-        # --- HUMAN BEHAVIOR PROFILES ---
         self.aggression = random.uniform(0.0, 1.0)
         self.compliance = random.uniform(0.0, 1.0)
         self.impatience = random.uniform(0.0, 1.0)
@@ -44,19 +42,15 @@ class TrafficSimulation:
         self.time_step = 0
         self.data_log = []
         self.car_counter = 0
-        # --- BATCH ZIPPER STATE (The AI Brain) ---
-        self.ai_zipper_active = False  # The boolean condition!
-        self.active_merge_lane = 1     # Starts by letting Lane 1 merge
-        self.cars_merged_in_batch = 0  # Counter
-        self.batch_size = 5            # How many cars per batch
-        
-        # --- TIMELINE SETUP ---
-        # Start at midnight on the first day
+        self.ai_zipper_active = False  
+        self.active_merge_lane = 1     
+        self.cars_merged_in_batch = 0  
+        self.batch_size = 5           
         self.start_time = datetime(2026, 4, 1, 0, 0) 
 
     def spawn_cars(self, num_cars=3):
         for i in range(num_cars):
-            # lane = random.choice([1,2,3])
+        
             lane = random.choices([1, 2, 3], weights=[0.40, 0.20, 0.40])[0]
             if(lane==1): 
                 color = 1
@@ -372,7 +366,8 @@ if __name__ == "__main__":
     sim = TrafficSimulation()
     
     # 180 days * (24 hours / 2 hour jumps) = 2160 steps
-    total_steps = 300 
+    total_steps = 300
+
     
     print(f"Starting 6-Month Simulation Generator (Total intervals: {total_steps})...")
     

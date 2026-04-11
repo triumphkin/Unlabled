@@ -110,7 +110,7 @@ def calculate_variable_speed_limits(lane_densities, base_speed=25.0):
     
     # If the road is relatively empty, don't intervene
     total_cars = sum(lane_densities.values())
-    if total_cars < 15:
+    if total_cars < 5:
         return target_speeds
         
     # 1. Apply Density Penalties
